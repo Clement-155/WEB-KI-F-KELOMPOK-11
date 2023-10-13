@@ -67,12 +67,13 @@ class CustomAuthController extends Controller
         $data = $request->all();
         //upload image
         $image = $request->file('id-photo');
+
+        
         $image->storeAs('public/id-card', $image->hashName());
         $data['id-photo'] = $image;
         $check = $this->create($data);
 
-
-        return redirect("dashboard")->withSuccess('You have signed-up');
+        return redirect("login")->withSuccess('You have signed-up');
     }
 
     //Creates new row in database
@@ -95,7 +96,7 @@ class CustomAuthController extends Controller
     public function dashboard()
     {
         if (Auth::check()) {
-            return view('test');
+            return redirect('privatefiles')->with('success', 'Login Success');
         }
 
         return redirect("login")->with('failed', 'You are not allowed to access');

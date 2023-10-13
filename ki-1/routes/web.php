@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +15,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {
+        return redirect('privatefiles')->with('success', 'Welcome Back');
+    }
+
+    return redirect("login");
 });
 
 /* Routes for pages */
@@ -25,4 +30,5 @@ Route::get('registration', [\App\Http\Controllers\CustomAuthController::class, '
 Route::post('custom-registration', [\App\Http\Controllers\CustomAuthController::class, 'customRegistration'])->name('register.custom'); 
 Route::get('signout', [\App\Http\Controllers\CustomAuthController::class, 'signOut'])->name('signout');
 
-/* Route for account information - database */
+/* Route for private files */
+Route::resource('/privatefiles', \App\Http\Controllers\PrivateFileController::class)->middleware('auth');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Session;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class CustomAuthController extends Controller
 {
@@ -23,10 +24,10 @@ class CustomAuthController extends Controller
         ]);
 
         //$credentials = $request->only('username', 'password');
-        
+
         //If auth success
         // if (Auth::attempt($credentials)) {
-            
+
         //     return redirect()->intended('welcome')
         //         ->withSuccess('Signed in');
         // }
@@ -35,7 +36,7 @@ class CustomAuthController extends Controller
             'password' => $request->password
         ])->first();
 
-        if($user){
+        if ($user) {
             Auth::login($user);
             return redirect("dashboard")->with('success', 'Logging in..');
         }
@@ -65,15 +66,26 @@ class CustomAuthController extends Controller
         ]);
 
         $data = $request->all();
+
+        $encryptionKey = random_bytes(16); // If hard to decrypt later change to static key
+
+        // Encrypt sensitive data with the generated key
+        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
+        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
+        $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
+        $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
+        $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);
+        $data['religion'] = $this->rc4Encrypt($data['religion'], $encryptionKey);
+        $data['marital-status'] = $this->rc4Encrypt($data['marital-status'], $encryptionKey);
+
         //upload image
         $image = $request->file('id-photo');
-
-        
         $image->storeAs('public/id-card', $image->hashName());
-        $data['id-photo'] = $image;
+        // $data['id-photo'] = $this->encryptImage($image);
+
         $check = $this->create($data);
 
-        return redirect("login")->withSuccess('You have signed-up');
+        return redirect("login")->withSuccess('You have signed up');
     }
 
     //Creates new row in database
@@ -109,5 +121,52 @@ class CustomAuthController extends Controller
         Auth::logout();
 
         return Redirect('login');
+    }
+
+    private function encryptImage($image)
+    {
+        $imagePath = $image->getRealPath();
+        $encryptedImagePath = 'public/image'; // Set the desired path to store the encrypted image
+
+        // Read the image file contents
+        $imageData = File::get($imagePath);
+
+        // Encrypt the image data using RC4
+        $encryptedData = $this->rc4Encrypt($imageData, '2');
+
+        // Write the encrypted image data to the file
+        File::put($encryptedImagePath, $encryptedData);
+
+        return $encryptedImagePath;
+    }
+
+    function rc4Encrypt($data, $key)
+    {
+        $s = array();
+        for ($i = 0; $i < 256; $i++) {
+            $s[$i] = $i;
+        }
+        $j = 0;
+        $n = strlen($key);
+        for ($i = 0; $i < 256; $i++) {
+            $j = ($j + $s[$i] + ord($key[$i % $n])) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+        }
+        $i = 0;
+        $j = 0;
+        $encrypted = '';
+        $dataLength = strlen($data);
+        for ($k = 0; $k < $dataLength; $k++) {
+            $i = ($i + 1) % 256;
+            $j = ($j + $s[$i]) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
+            $encoded = base64_encode($encrypted);
+        }
+        return $encoded;
     }
 }

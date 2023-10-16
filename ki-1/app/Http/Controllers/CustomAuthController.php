@@ -67,7 +67,7 @@ class CustomAuthController extends Controller
 
         $data = $request->all();
 
-        $encryptionKey = random_bytes(16); // If hard to decrypt later change to static key
+        $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
 
         // Encrypt sensitive data with the generated key
         // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
@@ -80,8 +80,9 @@ class CustomAuthController extends Controller
 
         //upload image
         $image = $request->file('id-photo');
-        $image->storeAs('public/id-card', $image->hashName());
-        // $data['id-photo'] = $this->encryptImage($image);
+        $fileName = $image->hashName();
+        $image->storeAs('public/id-card', $fileName);
+        $data['id-photo'] = $this->encryptImage(storage_path('app/public/id-card/' . $fileName), $encryptionKey);
 
         $check = $this->create($data);
 
@@ -93,7 +94,7 @@ class CustomAuthController extends Controller
     {
 
         return User::create([
-            'id-photo' => $data['id-photo']->hashName(),
+            'id-photo' => $data['id-photo'],
             'username' => $data['username'],
             'password' => $data['password'],
             'fullname' => $data['fullname'],
@@ -123,19 +124,16 @@ class CustomAuthController extends Controller
         return Redirect('login');
     }
 
-    private function encryptImage($image)
+    private function encryptImage($imagePath, $encryptionKey)
     {
-        $imagePath = $image->getRealPath();
-        $encryptedImagePath = 'public/image'; // Set the desired path to store the encrypted image
-
-        // Read the image file contents
         $imageData = File::get($imagePath);
+        $encryptedImagePath = 'public/id-card/encrypted_' . basename($imagePath);
 
         // Encrypt the image data using RC4
-        $encryptedData = $this->rc4Encrypt($imageData, '2');
+        $encryptedData = $this->rc4Encrypt($imageData, $encryptionKey);
 
         // Write the encrypted image data to the file
-        File::put($encryptedImagePath, $encryptedData);
+        File::put(storage_path('app/' . $encryptedImagePath), $encryptedData);
 
         return $encryptedImagePath;
     }

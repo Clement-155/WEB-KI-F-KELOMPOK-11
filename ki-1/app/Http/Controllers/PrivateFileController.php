@@ -44,19 +44,19 @@ class PrivateFileController extends Controller
     {
         //validate form for documents
         $validator = Validator::make($request->all(), [
-            'private_file'     => 'required|mimes:pdf,doc,docx,xls,xlsx'
+            'private_file'     => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
         ]);
-        
+
         //try again for video
         if ($validator->fails()) {
             $validator = Validator::make($request->all(), [
                 'private_file'     => 'required|mimetypes:video'
             ]);
         }
-        
+
         //file not valid type, error messages uses user's id
         if ($validator->fails()) {
-            return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id=>'Invalid file format']);
+            return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
         }
 
         //upload files to folders per user

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use phpseclib3\Crypt\AES;
+use phpseclib3\Crypt\Random;
+
 use Illuminate\Http\Request;
 use Session;
 use App\Models\User;
@@ -166,5 +169,26 @@ class CustomAuthController extends Controller
             $encoded = base64_encode($encrypted);
         }
         return $encoded;
+    }
+    
+    
+    function aes256cbcEncrypt($data, $key) {
+        $cipher = new AES('cbc');
+        $iv = Random::string(16);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+        
+        $ciphertext = $iv . $cipher->encrypt($data);
+        return $ciphertext;
+    }
+
+    function aes256cbcDecrypt($data, $key) {
+        $cipher = new AES('cbc');
+        $iv = substr($data, 0, 16);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+        
+        $plaintext = $cipher->decrypt(substr($data, 16, strlen($data) - 16));
+        return $plaintext;
     }
 }

@@ -90,7 +90,7 @@ class PrivateFileController extends Controller
         // Store the encrypted file
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $aesData);
-        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $desData);
+        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $desFileName, $desData);
 
         // Create a record in the database
         PrivateFile::create([

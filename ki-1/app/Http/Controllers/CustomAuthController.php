@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use phpseclib3\Crypt\AES;
+use phpseclib3\Crypt\DES;
+use phpseclib3\Crypt\Random;
+
 use Illuminate\Http\Request;
 use Session;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class CustomAuthController extends Controller
 {
@@ -23,10 +28,10 @@ class CustomAuthController extends Controller
         ]);
 
         //$credentials = $request->only('username', 'password');
-        
+
         //If auth success
         // if (Auth::attempt($credentials)) {
-            
+
         //     return redirect()->intended('welcome')
         //         ->withSuccess('Signed in');
         // }
@@ -35,7 +40,7 @@ class CustomAuthController extends Controller
             'password' => $request->password
         ])->first();
 
-        if($user){
+        if ($user) {
             Auth::login($user);
             return redirect("dashboard")->with('success', 'Logging in..');
         }
@@ -65,15 +70,27 @@ class CustomAuthController extends Controller
         ]);
 
         $data = $request->all();
+
+        $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
+
+        // Encrypt sensitive data with the generated key
+        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
+        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
+        $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
+        $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
+        $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);
+        $data['religion'] = $this->rc4Encrypt($data['religion'], $encryptionKey);
+        $data['marital-status'] = $this->rc4Encrypt($data['marital-status'], $encryptionKey);
+
         //upload image
         $image = $request->file('id-photo');
+        $fileName = $image->hashName();
+        $image->storeAs('public/id-card', $fileName);
+        $data['id-photo'] = $this->encryptImage(storage_path('app/public/id-card/' . $fileName), $encryptionKey);
 
-        
-        $image->storeAs('public/id-card', $image->hashName());
-        $data['id-photo'] = $image;
         $check = $this->create($data);
 
-        return redirect("login")->withSuccess('You have signed-up');
+        return redirect("login")->withSuccess('You have signed up');
     }
 
     //Creates new row in database
@@ -81,7 +98,7 @@ class CustomAuthController extends Controller
     {
 
         return User::create([
-            'id-photo' => $data['id-photo']->hashName(),
+            'id-photo' => $data['id-photo'],
             'username' => $data['username'],
             'password' => $data['password'],
             'fullname' => $data['fullname'],
@@ -109,5 +126,94 @@ class CustomAuthController extends Controller
         Auth::logout();
 
         return Redirect('login');
+    }
+
+    private function encryptImage($imagePath, $encryptionKey)
+    {
+        $imageData = File::get($imagePath);
+        $encryptedImagePath = 'public/id-card/encrypted_' . basename($imagePath);
+
+        // Encrypt the image data using RC4
+        $encryptedData = $this->rc4Encrypt($imageData, $encryptionKey);
+
+        // Write the encrypted image data to the file
+        File::put(storage_path('app/' . $encryptedImagePath), $encryptedData);
+
+        return $encryptedImagePath;
+    }
+
+    function rc4Encrypt($data, $key)
+    {
+        $s = array();
+        for ($i = 0; $i < 256; $i++) {
+            $s[$i] = $i;
+        }
+        $j = 0;
+        $n = strlen($key);
+        for ($i = 0; $i < 256; $i++) {
+            $j = ($j + $s[$i] + ord($key[$i % $n])) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+        }
+        $i = 0;
+        $j = 0;
+        $encrypted = '';
+        $dataLength = strlen($data);
+        for ($k = 0; $k < $dataLength; $k++) {
+            $i = ($i + 1) % 256;
+            $j = ($j + $s[$i]) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
+            $encoded = base64_encode($encrypted);
+        }
+        return $encoded;
+    }
+
+
+    function aes256cbcEncrypt($data, $key)
+    {
+        $cipher = new AES('cbc');
+        $iv = Random::string(16);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+
+        $ciphertext = $iv . $cipher->encrypt($data);
+        return $ciphertext;
+    }
+
+    function aes256cbcDecrypt($data, $key)
+    {
+        $cipher = new AES('cbc');
+        $iv = substr($data, 0, 16);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+
+        $plaintext = $cipher->decrypt(substr($data, 16, strlen($data) - 16));
+        return $plaintext;
+    }
+
+    function desEncrypt($data, $key)
+    {
+        $cipher = new DES('cbc');
+        $iv = Random::string(8);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+
+        $ciphertext = $iv . $cipher->encrypt($data);
+        return $ciphertext;
+    }
+
+    function desDecrypt($data, $key)
+    {
+        $cipher = new DES('cbc');
+        $iv = substr($data, 0, 8);
+        $cipher->setIV($iv);
+        $cipher->setKey($key);
+
+        $plaintext = $cipher->decrypt(substr($data, 8, strlen($data) - 8));
+        return $plaintext;
     }
 }

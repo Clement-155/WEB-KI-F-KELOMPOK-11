@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use phpseclib3\Crypt\AES;
@@ -70,11 +71,13 @@ class PrivateFileController extends Controller
         // Generate a random encryption key
         $key = 'amogus';
         $aeskey = 'abcdefghijklmnopqrstuvwxyz123456';
+        $deskey = "12345678";
 
         // Encrypt the file data
         $controller = new CustomAuthController();
         $encryptedData = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $key);
         $aesData = $controller->aes256cbcEncrypt(file_get_contents($file->getRealPath()), $aeskey);
+        $desData = $controller->desEncrypt(file_get_contents($file->getRealPath()), $deskey);
 
         // Determine the file extension
         $fileExtension = $file->getClientOriginalExtension();
@@ -82,10 +85,12 @@ class PrivateFileController extends Controller
         // Generate a unique file name for the encrypted file
         $encryptedFileName = 'encrypted_' . time() . '.' . $fileExtension;
         $aesFileName = 'aes_' . time() . '.' . $fileExtension;
+        $desFileName = 'des_' . time() . '.' . $fileExtension;
 
         // Store the encrypted file
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $aesData);
+        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $desData);
 
         // Create a record in the database
         PrivateFile::create([
@@ -96,6 +101,11 @@ class PrivateFileController extends Controller
         PrivateFile::create([
             'user_id' => Auth::user()->id,
             'private_file' => $aesFileName,
+        ]);
+
+        PrivateFile::create([
+            'user_id' => Auth::user()->id,
+            'private_file' => $desFileName,
         ]);
 
         // Redirect to index

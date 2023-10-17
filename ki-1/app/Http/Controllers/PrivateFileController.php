@@ -48,7 +48,9 @@ class PrivateFileController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // Validate form for documents
+        // Validate form for documents
         $validator = Validator::make($request->all(), [
+            'private_file' => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
             'private_file' => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
         ]);
 
@@ -60,10 +62,21 @@ class PrivateFileController extends Controller
         // }
 
         // File not a valid type, error messages use user's id
+
+        // Try again for video
+        // if ($validator->fails()) {
+        //     $validator = Validator::make($request->all(), [
+        //         'private_file' => 'required|mimetypes:video'
+        //     ]);
+        // }
+
+        // File not a valid type, error messages use user's id
         if ($validator->fails()) {
+            return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
             return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
         }
 
+        // Get the file from the request
         // Get the file from the request
         $file = $request->file('private_file');
 
@@ -90,11 +103,14 @@ class PrivateFileController extends Controller
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
 
         // Create a record in the database
+        // Create a record in the database
         PrivateFile::create([
             'user_id' => Auth::user()->id,
             'private_file' => $encryptedFileName,
+            'private_file' => $encryptedFileName,
         ]);
 
+        // Redirect to index
         // Redirect to index
         return redirect()->route('privatefiles.index')->with(['success' => 'Data Berhasil Disimpan!']);
     }

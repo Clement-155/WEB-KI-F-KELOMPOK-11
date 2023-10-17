@@ -22,7 +22,7 @@ class PrivateFile extends Model
     /**
      * Each file belongs to a user
      */
-    public function post(): BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

@@ -51,7 +51,6 @@ class PrivateFileController extends Controller
         // Validate form for documents
         $validator = Validator::make($request->all(), [
             'private_file' => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
-            'private_file' => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
         ]);
 
         // Try again for video

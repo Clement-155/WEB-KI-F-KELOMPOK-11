@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PrivateFile;
 
 //return type View
+use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 use Illuminate\View\View;
 
@@ -29,7 +30,6 @@ class PrivateFileController extends Controller
     {
         //get posts
         $privateFiles = PrivateFile::latest()->where('user_id', '=', Auth::user()->id)->paginate(5); //FIX : Can use eliquent to get files instead
-
         //render view with posts
         return view('privatefiles.dashboard', compact('privateFiles'));
     }
@@ -73,5 +73,15 @@ class PrivateFileController extends Controller
 
         //redirect to index
         return redirect()->route('privatefiles.index')->with(['success' => 'Data Berhasil Disimpan!']);
+    }
+
+    public function download($path)
+    {
+        try{
+            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));
+        }  catch (FileNotFoundException $e) {
+            abort(404); //or whatever you want do here
+        }
+        return $result;
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,3 +33,4 @@ Route::get('signout', [\App\Http\Controllers\CustomAuthController::class, 'signO
 
 /* Route for private files */
 Route::resource('/privatefiles', \App\Http\Controllers\PrivateFileController::class)->middleware('auth');
+Route::get("/{path}", '\App\Http\Controllers\PrivateFileController@download')->middleware('auth');

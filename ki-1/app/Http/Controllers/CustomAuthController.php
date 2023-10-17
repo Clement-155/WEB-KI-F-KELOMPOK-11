@@ -69,9 +69,6 @@ class CustomAuthController extends Controller
 
         $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
 
-        // Encrypt sensitive data with the generated key
-        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
-        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
         $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
         $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
         $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);

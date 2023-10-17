@@ -54,24 +54,14 @@ class PrivateFileController extends Controller
         ]);
 
         // Try again for video
-        // if ($validator->fails()) {
-        //     $validator = Validator::make($request->all(), [
-        //         'private_file' => 'required|mimetypes:video'
-        //     ]);
-        // }
-
-        // File not a valid type, error messages use user's id
-
-        // Try again for video
-        // if ($validator->fails()) {
-        //     $validator = Validator::make($request->all(), [
-        //         'private_file' => 'required|mimetypes:video'
-        //     ]);
-        // }
+        if ($validator->fails()) {
+            $validator = Validator::make($request->all(), [
+                'private_file' => 'required|mimetypes:video'
+            ]);
+        }
 
         // File not a valid type, error messages use user's id
         if ($validator->fails()) {
-            return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
             return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
         }
 
@@ -105,7 +95,6 @@ class PrivateFileController extends Controller
         // Create a record in the database
         PrivateFile::create([
             'user_id' => Auth::user()->id,
-            'private_file' => $encryptedFileName,
             'private_file' => $encryptedFileName,
         ]);
 

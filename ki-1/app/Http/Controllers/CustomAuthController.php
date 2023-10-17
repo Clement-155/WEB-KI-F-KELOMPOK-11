@@ -163,8 +163,8 @@ class CustomAuthController extends Controller
             $s[$i] = $s[$j];
             $s[$j] = $temp;
             $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
-            $encoded = base64_encode($encrypted);
         }
+        $encoded = base64_encode($encrypted);
         return $encoded;
     }
 }

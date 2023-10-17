@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Auth;
 use League\Flysystem\WhitespacePathNormalizer;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\CustomAuthController;
+use Illuminate\Support\Str;
+use phpseclib3\Crypt\RC4;
+
+include('..\vendor\autoload.php'); //adjust to your directory
 
 class PrivateFileController extends Controller
 {
@@ -66,15 +70,21 @@ class PrivateFileController extends Controller
         // Generate a random encryption key
         $key = 'amogus';
 
+        // Create a new RC4 object
+        $rc4 = new RC4();
+
+        // Set the encryption key
+        $rc4->setKey($key);
+
         // Encrypt the file data
-        $controller = new CustomAuthController();
-        $encryptedData = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $key);
+        $encryptedData = $rc4->encrypt(file_get_contents($file->getRealPath()));
 
         // Determine the file extension
         $fileExtension = $file->getClientOriginalExtension();
 
         // Generate a unique file name for the encrypted file
-        $encryptedFileName = 'encrypted_' . time() . '.' . $fileExtension;
+        $originalFileName = $file->getClientOriginalName();
+        $encryptedFileName = 'rc4_' . Str::slug($originalFileName) .  time() . '.' . $fileExtension;
 
         // Store the encrypted file
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
@@ -91,11 +101,29 @@ class PrivateFileController extends Controller
 
     public function download($path)
     {
-        try{
-            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));
-        }  catch (FileNotFoundException $e) {
+        try {
+            // Get the encrypted file
+            $encryptedFile = Storage::get('private/privatefiles/' . Auth::user()->username . '/' . $path);
+
+            // Create a new RC4 object
+            $rc4 = new RC4();
+
+            // Set the encryption key
+            $rc4->setKey('amogus');
+
+            // Decrypt the file data
+            $decryptedData = $rc4->decrypt($encryptedFile);
+
+            // Create a response
+            $response = response($decryptedData);
+
+            // Set the appropriate headers
+            $response->header('Content-Type', 'application/octet-stream');
+            $response->header('Content-Disposition', 'attachment; filename="' . $path . '"');
+
+            return $response;
+        } catch (FileNotFoundException $e) {
             abort(404); //or whatever you want do here
         }
-        return $result;
     }
 }

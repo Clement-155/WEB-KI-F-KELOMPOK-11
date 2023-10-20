@@ -72,11 +72,8 @@ class CustomAuthController extends Controller
 
         $data = $request->all();
 
-        $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
+        $encryptionKey = 'amogus'; 
 
-        // Encrypt sensitive data with the generated key
-        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
-        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
         $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
         $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
         $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);
@@ -169,9 +166,9 @@ class CustomAuthController extends Controller
             $temp = $s[$i];
             $s[$i] = $s[$j];
             $s[$j] = $temp;
-            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
-            $encoded = base64_encode($encrypted);
+            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]); 
         }
+        $encoded = base64_encode($encrypted);
         $functionName = __FUNCTION__;
         $end = hrtime(true);
         $eta = $end - $start;

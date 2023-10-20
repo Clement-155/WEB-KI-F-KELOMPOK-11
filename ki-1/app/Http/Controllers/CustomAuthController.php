@@ -114,7 +114,7 @@ class CustomAuthController extends Controller
     public function dashboard()
     {
         if (Auth::check()) {
-            
+
             return redirect('privatefiles')->with('success', 'Login Success');
         }
 
@@ -180,6 +180,41 @@ class CustomAuthController extends Controller
         return $encoded;
     }
 
+    function rc4Decrypt($data, $key)
+    {
+        $start = hrtime(true);
+        $s = array();
+        for ($i = 0; $i < 256; $i++) {
+            $s[$i] = $i;
+        }
+        $j = 0;
+        $n = strlen($key);
+        for ($i = 0; $i < 256; $i++) {
+            $j = ($j + $s[$i] + ord($key[$i % $n])) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+        }
+        $i = 0;
+        $j = 0;
+        $decrypted = '';
+        $data = base64_decode($data);  // Decode the data from base64 to binary
+        $dataLength = strlen($data);
+        for ($k = 0; $k < $dataLength; $k++) {
+            $i = ($i + 1) % 256;
+            $j = ($j + $s[$i]) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+            $decrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
+        }
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
+        return $decrypted;
+    }
 
     function aes256cbcEncrypt($data, $key)
     {

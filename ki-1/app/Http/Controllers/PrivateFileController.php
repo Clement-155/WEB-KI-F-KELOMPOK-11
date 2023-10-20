@@ -10,6 +10,7 @@ use phpseclib3\Crypt\Random;
 use App\Models\PrivateFile;
 
 //return type View
+use phpseclib3\Crypt\RC4;
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 use Illuminate\View\View;
@@ -70,14 +71,16 @@ class PrivateFileController extends Controller
         // Get the file from the request
         $file = $request->file('private_file');
 
-        // Generate a random encryption key
-        $key = 'amogus';
+        // Generate a random encryption rckey
+        $rckey = 'amogus';
         $aeskey = 'abcdefghijklmnopqrstuvwxyz123456';
         $deskey = "12345678";
 
+        $rc4 = new RC4();
         // Encrypt the file data
         $controller = new CustomAuthController();
-        $encryptedData = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $key);
+        $rc4->setKey($rckey);
+        $rc4Data = $rc4->encrypt(file_get_contents($file->getRealPath()));
         $aesData = $controller->aes256cbcEncrypt(file_get_contents($file->getRealPath()), $aeskey);
         $desData = $controller->desEncrypt(file_get_contents($file->getRealPath()), $deskey);
 
@@ -85,19 +88,20 @@ class PrivateFileController extends Controller
         $fileExtension = $file->getClientOriginalExtension();
 
         // Generate a unique file name for the encrypted file
-        $encryptedFileName = 'encrypted_' . time() . '.' . $fileExtension;
+        $originalFileName = $file->getClientOriginalName();
+        $rc4FileName = 'rc4_' . time() . '.' . $fileExtension;
         $aesFileName = 'aes_' . time() . '.' . $fileExtension;
         $desFileName = 'des_' . time() . '.' . $fileExtension;
 
         // Store the encrypted file
-        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
+        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $rc4FileName, $rc4Data);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $aesData);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $desFileName, $desData);
 
         // Create a record in the database
         PrivateFile::create([
             'user_id' => Auth::user()->id,
-            'private_file' => $encryptedFileName,
+            'private_file' => $rc4FileName,
         ]);
 
         PrivateFile::create([
@@ -114,13 +118,41 @@ class PrivateFileController extends Controller
         return redirect()->route('privatefiles.index')->with(['success' => 'Data Berhasil Disimpan!']);
     }
 
-    public function download($path)
+    public function download($path) //Currently for rc4
     {
-        try{
-            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));
-        }  catch (FileNotFoundException $e) {
+        try {
+            // Get the encrypted file
+            $rc4File = Storage::get('private/privatefiles/' . Auth::user()->username . '/' . $path);
+
+            // Create a new RC4 object
+            $rc4 = new RC4();
+
+            // Set the encryption rckey
+            $rc4->setKey('amogus');
+
+            // Decrypt the file data
+            $rc4Data = $rc4->decrypt($rc4File);
+
+            // Create a response
+            $response = response($rc4Data);
+
+            // Set the appropriate headers
+            $response->header('Content-Type', 'application/octet-stream');
+            $response->header('Content-Disposition', 'attachment; filename="' . $path . '"');
+
+            return $response;
+        } catch (FileNotFoundException $e) {
             abort(404); //or whatever you want do here
         }
-        return $result;
     }
+
+    // public function download($path)
+    // {
+    //     try{
+    //         $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));
+    //     }  catch (FileNotFoundException $e) {
+    //         abort(404); //or whatever you want do here
+    //     }
+    //     return $result;
+    // }
 }

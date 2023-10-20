@@ -80,7 +80,15 @@ class PrivateFileController extends Controller
         // Encrypt the file data
         $controller = new CustomAuthController();
         $rc4->setKey($rckey);
+
+        //RC4
+        $start = hrtime(true);
         $rc4Data = $rc4->encrypt(file_get_contents($file->getRealPath()));
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("rc4Eecrypt : Code block was running for $eta milliseconds");
+
         $aesData = $controller->aes256cbcEncrypt(file_get_contents($file->getRealPath()), $aeskey);
         $desData = $controller->desEncrypt(file_get_contents($file->getRealPath()), $deskey);
 
@@ -124,24 +132,35 @@ class PrivateFileController extends Controller
             // Get the encrypted file
             $encryptedFile = Storage::get('private/privatefiles/' . Auth::user()->username . '/' . $path);
 
-            // Create a new RC4 object
+            // Create a new Algorithm object
             $rc4 = new RC4();
+            $controller = new CustomAuthController();
 
             // Set the encryption rckey
             $rc4->setKey('amogus');
+            $aeskey = 'abcdefghijklmnopqrstuvwxyz123456';
+            $deskey = "12345678";
 
             // Decrypt the file data
             if (strpos($path, 'rc4_') === 0) {
+                $start = hrtime(true);
+
                 // Decrypt the file data using RC4
                 $decryptedData = $rc4->decrypt($encryptedFile);
+
+                $end = hrtime(true);
+                $eta = $end - $start;
+                $eta /= 1e+6;
+                Log::channel('encrypt_log')->info("rc4Decrypt : Code block was running for $eta milliseconds");
             }
-            //  elseif (strpos($path, 'aes_') === 0) {
-            //     // Decrypt the file data using AES
-            //     $decryptedData = $controller->aes256cbcDecrypt($encryptedFile, $aes->getKey());
-            // } elseif (strpos($path, 'des_') === 0) {
-            //     // Decrypt the file data using DES
-            //     $decryptedData = $controller->desDecrypt($encryptedFile, $des->getKey());
-            // }
+ 
+             elseif (strpos($path, 'aes_') === 0) {
+                // Decrypt the file data using AES
+                $decryptedData = $controller->aes256cbcDecrypt($encryptedFile, $aeskey);
+            } elseif (strpos($path, 'des_') === 0) {
+                // Decrypt the file data using DES
+                $decryptedData = $controller->desDecrypt($encryptedFile, $deskey);
+            }
 
             // Create a response
             $response = response($decryptedData);

@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use League\Flysystem\WhitespacePathNormalizer;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\CustomAuthController;
-
+use Exception;
 
 class PrivateFileController extends Controller
 {
@@ -122,7 +122,7 @@ class PrivateFileController extends Controller
     {
         try {
             // Get the encrypted file
-            $rc4File = Storage::get('private/privatefiles/' . Auth::user()->username . '/' . $path);
+            $encryptedFile = Storage::get('private/privatefiles/' . Auth::user()->username . '/' . $path);
 
             // Create a new RC4 object
             $rc4 = new RC4();
@@ -131,10 +131,20 @@ class PrivateFileController extends Controller
             $rc4->setKey('amogus');
 
             // Decrypt the file data
-            $rc4Data = $rc4->decrypt($rc4File);
+            if (strpos($path, 'rc4_') === 0) {
+                // Decrypt the file data using RC4
+                $decryptedData = $rc4->decrypt($encryptedFile);
+            }
+            //  elseif (strpos($path, 'aes_') === 0) {
+            //     // Decrypt the file data using AES
+            //     $decryptedData = $controller->aes256cbcDecrypt($encryptedFile, $aes->getKey());
+            // } elseif (strpos($path, 'des_') === 0) {
+            //     // Decrypt the file data using DES
+            //     $decryptedData = $controller->desDecrypt($encryptedFile, $des->getKey());
+            // }
 
             // Create a response
-            $response = response($rc4Data);
+            $response = response($decryptedData);
 
             // Set the appropriate headers
             $response->header('Content-Type', 'application/octet-stream');

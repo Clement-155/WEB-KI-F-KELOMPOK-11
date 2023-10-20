@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\AES;
 use phpseclib3\Crypt\Random;
 
@@ -36,6 +37,7 @@ class PrivateFileController extends Controller
     {
         //get posts
         $privateFiles = PrivateFile::latest()->where('user_id', '=', Auth::user()->id)->paginate(5); //FIX : Can use eliquent to get files instead
+
         //render view with posts
         return view('privatefiles.dashboard', compact('privateFiles'));
     }

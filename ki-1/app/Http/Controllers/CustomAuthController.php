@@ -98,9 +98,6 @@ class CustomAuthController extends Controller
     //Creates new row in database
     public function create(array $data)
     {
-        $data['private'] = substr($data['private'], 0, 60);
-        $data['public'] = substr($data['public'], 0, 60);
-
         return User::create([
             'id-photo' => $data['id-photo'],
             'username' => $data['username'],

@@ -126,6 +126,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        // For storing encrypt/decrypt time
+        'encrypt_log' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/encrypt.log'),
+            'level' => 'debug',
+           ],
     ],
 
 ];

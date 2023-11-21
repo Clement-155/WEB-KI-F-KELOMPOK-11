@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Http\Controllers\CustomAuthController;
+
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -10,22 +13,24 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use phpseclib3\Crypt\RC4;
 
 class ProfileController extends Controller
 {
     public function index(): View
     {
-        //get posts
-        $user = User::where('username', '=', Auth::user()->username)->first(); //FIX : Can use eliquent to get files instead
-        //Profile didecrypt dulu
-        
+        //get user
+        $user = User::where('username', '=', Auth::user()->username)->first();
+
+        $rc4Controller = new CustomAuthController();
+
         $userProfile = array(
-            "id-card" => $user->getAttribute('id-photo'),
-            "fullname" => $user->fullname,
-            "gender" => $user->gender,
-            "citizenship" => $user->citizenship,
-            "religion" => $user->religion,
-            "marital" => $user->getAttribute('marital-status'),
+            "id-card" => $rc4Controller->rc4Decrypt($user->getAttribute('id-photo'), 'amogus'),
+            "fullname" => $rc4Controller->rc4Decrypt($user->fullname, 'amogus'),
+            "gender" => $rc4Controller->rc4Decrypt($user->gender, 'amogus'),
+            "citizenship" => $rc4Controller->rc4Decrypt($user->citizenship, 'amogus'),
+            "religion" => $rc4Controller->rc4Decrypt($user->religion, 'amogus'),
+            "marital" => $rc4Controller->rc4Decrypt($user->getAttribute('marital-status'), 'amogus'),
         );
 
         //render view with posts

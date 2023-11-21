@@ -69,9 +69,9 @@ class PrivateFileController extends Controller
         $file = $request->file('private_file');
 
         // Generate a random encryption key
-        $rc4key = Random::string(32);
-        $aeskey = Random::string(32);
-        $deskey = Random::string(8);
+        $rc4key = bin2hex(random_bytes(16)); // 16 * 8 = 128 bit. 128 bit / 4 = 32 karakter hexadecimal
+        $aeskey = bin2hex(random_bytes(16));
+        $deskey = bin2hex(random_bytes(4)); // 8 karakter hexadecimal
 
         // Encrypt the file data
         $controller = new CustomAuthController();
@@ -83,7 +83,7 @@ class PrivateFileController extends Controller
         $fileExtension = $file->getClientOriginalExtension();
 
         // Generate a unique file name for the encrypted file
-        $rc4FileName = 'rc4' . time() . '.' . $fileExtension;
+        $rc4FileName = 'rc4_' . time() . '.' . $fileExtension;
         $aesFileName = 'aes_' . time() . '.' . $fileExtension;
         $desFileName = 'des_' . time() . '.' . $fileExtension;
 

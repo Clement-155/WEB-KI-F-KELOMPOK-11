@@ -71,11 +71,13 @@ class CustomAuthController extends Controller
 
         $data = $request->all();
 
+        //Generate RSA keys
+        $rsaKeys = $this->rsakeygen();
+        $data['private'] = $rsaKeys['privatekey'];
+        $data['public'] = $rsaKeys['publickey'];
+
         $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
 
-        // Encrypt sensitive data with the generated key
-        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
-        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
         $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
         $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
         $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);
@@ -96,7 +98,6 @@ class CustomAuthController extends Controller
     //Creates new row in database
     public function create(array $data)
     {
-
         return User::create([
             'id-photo' => $data['id-photo'],
             'username' => $data['username'],
@@ -106,6 +107,8 @@ class CustomAuthController extends Controller
             'citizenship' => $data['citizenship'],
             'religion' => $data['religion'],
             'marital-status' => $data['marital-status'],
+            'private' => $data['private'],
+            'public' => $data['public'],
         ]);
     }
 
@@ -216,7 +219,8 @@ class CustomAuthController extends Controller
         $plaintext = $cipher->decrypt(substr($data, 8, strlen($data) - 8));
         return $plaintext;
     }
-    function rsakeygen(){
+    function rsakeygen()
+    {
         $rsa = RSA::createKey();
         $public = $rsa->getPublicKey();
         return [
@@ -224,14 +228,16 @@ class CustomAuthController extends Controller
             'privatekey' => $rsa,
         ];
     }
-    function rsadecrypt($data, $key){
-        
+    function rsadecrypt($data, $key)
+    {
+
         return $key->decrypt($data);
     }
-    function rsaencrypt($data, $key){
-     
-      $encryptedData = $key->encrypt($data);
-    
+    function rsaencrypt($data, $key)
+    {
+
+        $encryptedData = $key->encrypt($data);
+
         return $encryptedData;
     }
 }

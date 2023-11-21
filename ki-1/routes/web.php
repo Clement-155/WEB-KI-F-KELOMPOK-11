@@ -39,3 +39,7 @@ Route::get('signout', [\App\Http\Controllers\CustomAuthController::class, 'signO
 Route::resource('/privatefiles', \App\Http\Controllers\PrivateFileController::class)->middleware('auth');
 Route::get("/download/{path}", '\App\Http\Controllers\PrivateFileController@download')->middleware('auth');
 Route::resource("/share", ShareController::class)->middleware('auth');
+
+Route::get('/download-index', [ShareController::class, 'download_index'])->middleware('auth')->name('download-index');
+Route::get('/download-key', [ShareController::class, 'downloadKey'])->middleware('auth')->name('download-key');
+Route::post('/download-shared', [ShareController::class, 'download_shared'])->middleware('auth')->name('download-shared');

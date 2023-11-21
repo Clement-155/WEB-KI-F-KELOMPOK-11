@@ -302,7 +302,7 @@ class CustomAuthController extends Controller
     }
     function rsaencrypt($data, $key)
     {
-
+        
         $encryptedData = $key->encrypt($data);
 
         return $encryptedData;

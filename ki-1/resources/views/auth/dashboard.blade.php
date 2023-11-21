@@ -30,6 +30,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile') }}">Profile</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('share.index') }}">Share File</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('download-index') }}">Download Shared Files</a>
+                    </li>
                     @endguest
                 </ul>
             </div>

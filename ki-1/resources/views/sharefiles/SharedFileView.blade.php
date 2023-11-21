@@ -24,32 +24,39 @@
                     <div class="card-body">
                         <!-- Upload Button -->
 
-                        
-                        <form class="mb-4"action="{{ route('share.store') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="form-group">
-                                <label class="font-weight-bold">Choose File</label>
-                                <select name="sharefile" id="sharefile">
-                                     @foreach($files as $file)
-                                    <option value="{{ $file->id }}">{{ $file->private_file }}</option>
-                                    @endforeach
-                                </select>
-                                <label for="user">Select User:</label>
-                                <select name="user" id="user">
-                                @foreach($users as $user)
-                                 <option value="{{ $user->id }}">{{ $user->username }}</option>
-                                @endforeach
-                                 </select>
-                            </div>
-                            <button type="submit" class="btn btn-md btn-primary">SHARE</button>
 
+                        <form class="mb-4" action="{{ route('download-shared') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="form-group mb-3">
+                                <label>File ID</label>
+                                <input type="text" placeholder="File ID" id="file_id" class="form-control" name="file_id" required autofocus>
+                                @if ($errors->has('file_id'))
+                                <span class="text-danger">{{ $errors->first('file_id') }}</span>
+                                @endif
+                            </div>
+
+                            
+                            <div class="form-group mb-3">
+                                <label>Owner Name</label>
+                                <input type="text" placeholder="File Owner's Name" id="owner_name" class="form-control" name="owner_name" required autofocus>
+                                @if ($errors->has('owner_name'))
+                                <span class="text-danger">{{ $errors->first('owner_name') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>File Key</label>
+                                <input type="file" placeholder="File Key" id="file_key" class="form-control" name="file_key" required>
+                                @if ($errors->has('file_key'))
+                                <span class="text-danger">{{ $errors->first('file_key') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="d-grid mx-auto">
+                                <button type="submit" class="btn btn-dark btn-block">Download</button>
+                            </div>
                         </form>
-                        @if(session('encrypted'))
-                                <h4>File id</h4>
-                                <p>{{ session('file_id') }}</p>
-                                <h4>File Key</h4>
-                                <p>{{ session('encrypted') }}</p>
-                        @endif
                     </div>
                 </div>
             </div>

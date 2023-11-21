@@ -27,6 +27,8 @@ class User extends Authenticatable
         'citizenship',
         'religion',
         'marital-status',
+        'private',
+        'public',
     ];
 
     /**

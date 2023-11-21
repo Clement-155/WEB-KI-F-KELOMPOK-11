@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\AES;
 use phpseclib3\Crypt\DES;
 use phpseclib3\Crypt\Random;
@@ -71,11 +72,8 @@ class CustomAuthController extends Controller
 
         $data = $request->all();
 
-        $encryptionKey = 'amogus'; // If hard to decrypt later change to static key
+        $encryptionKey = 'amogus'; 
 
-        // Encrypt sensitive data with the generated key
-        // $data['username'] = $this->rc4Encrypt($data['username'], $encryptionKey);
-        // $data['password'] = $this->rc4Encrypt($data['password'], $encryptionKey);
         $data['fullname'] = $this->rc4Encrypt($data['fullname'], $encryptionKey);
         $data['gender'] = $this->rc4Encrypt($data['gender'], $encryptionKey);
         $data['citizenship'] = $this->rc4Encrypt($data['citizenship'], $encryptionKey);
@@ -113,6 +111,7 @@ class CustomAuthController extends Controller
     public function dashboard()
     {
         if (Auth::check()) {
+
             return redirect('privatefiles')->with('success', 'Login Success');
         }
 
@@ -144,6 +143,7 @@ class CustomAuthController extends Controller
 
     function rc4Encrypt($data, $key)
     {
+        $start = hrtime(true);
         $s = array();
         for ($i = 0; $i < 256; $i++) {
             $s[$i] = $i;
@@ -166,54 +166,118 @@ class CustomAuthController extends Controller
             $temp = $s[$i];
             $s[$i] = $s[$j];
             $s[$j] = $temp;
-            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
-            $encoded = base64_encode($encrypted);
+            $encrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]); 
         }
+        $encoded = base64_encode($encrypted);
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
         return $encoded;
     }
 
+    function rc4Decrypt($data, $key)
+    {
+        $start = hrtime(true);
+        $s = array();
+        for ($i = 0; $i < 256; $i++) {
+            $s[$i] = $i;
+        }
+        $j = 0;
+        $n = strlen($key);
+        for ($i = 0; $i < 256; $i++) {
+            $j = ($j + $s[$i] + ord($key[$i % $n])) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+        }
+        $i = 0;
+        $j = 0;
+        $decrypted = '';
+        $data = base64_decode($data);  // Decode the data from base64 to binary
+        $dataLength = strlen($data);
+        for ($k = 0; $k < $dataLength; $k++) {
+            $i = ($i + 1) % 256;
+            $j = ($j + $s[$i]) % 256;
+            $temp = $s[$i];
+            $s[$i] = $s[$j];
+            $s[$j] = $temp;
+            $decrypted .= $data[$k] ^ chr($s[($s[$i] + $s[$j]) % 256]);
+        }
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
+        return $decrypted;
+    }
 
     function aes256cbcEncrypt($data, $key)
     {
+        $start = hrtime(true);
         $cipher = new AES('cbc');
         $iv = Random::string(16);
         $cipher->setIV($iv);
         $cipher->setKey($key);
 
         $ciphertext = $iv . $cipher->encrypt($data);
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
         return $ciphertext;
     }
 
     function aes256cbcDecrypt($data, $key)
     {
+        $start = hrtime(true);
         $cipher = new AES('cbc');
         $iv = substr($data, 0, 16);
         $cipher->setIV($iv);
         $cipher->setKey($key);
 
         $plaintext = $cipher->decrypt(substr($data, 16, strlen($data) - 16));
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
         return $plaintext;
     }
 
     function desEncrypt($data, $key)
     {
+        $start = hrtime(true);
         $cipher = new DES('cbc');
         $iv = Random::string(8);
         $cipher->setIV($iv);
         $cipher->setKey($key);
 
         $ciphertext = $iv . $cipher->encrypt($data);
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
         return $ciphertext;
     }
 
     function desDecrypt($data, $key)
     {
+        $start = hrtime(true);
         $cipher = new DES('cbc');
         $iv = substr($data, 0, 8);
         $cipher->setIV($iv);
         $cipher->setKey($key);
 
         $plaintext = $cipher->decrypt(substr($data, 8, strlen($data) - 8));
+        $functionName = __FUNCTION__;
+        $end = hrtime(true);
+        $eta = $end - $start;
+        $eta /= 1e+6;
+        Log::channel('encrypt_log')->info("$functionName : Code block was running for $eta milliseconds");
         return $plaintext;
     }
 }

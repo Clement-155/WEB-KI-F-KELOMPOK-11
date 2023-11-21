@@ -54,7 +54,7 @@
                                 <tr>
                                     <td>{{ $file->created_at }}</td>
                                     <!-- Builds file path for download -->
-                                    <td><a href="{{ Storage::url('private/privatefiles/' . (Auth::user()->username) . '/' . ($file->private_file)) }}" download>{!! $file->private_file !!}</a></td>
+                                    <td><a href="{{ '/download/' . ($file->private_file) }}">{!! $file->private_file !!}</a></td>
                                     <td class="text-center">
                                         <form onsubmit="return confirm('Apakah Anda Yakin ?');" action="{{ route('privatefiles.destroy', $file->id) }}" method="POST">
                                             @csrf

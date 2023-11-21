@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,9 +22,13 @@ Route::get('/', function () {
 
     return redirect("login");
 });
+/* Route for user profile */
 
+
+
+Route::get('profile',[\App\Http\Controllers\ProfileController::class,'index'])->middleware('auth')->name('profile');
 /* Routes for pages */
-Route::get('dashboard', [\App\Http\Controllers\CustomAuthController::class, 'dashboard'])->middleware('auth'); 
+Route::get('dashboard', [\App\Http\Controllers\CustomAuthController::class, 'dashboard'])->middleware('auth')->name('dashboard'); 
 Route::get('login', [\App\Http\Controllers\CustomAuthController::class, 'index'])->name('login');
 Route::post('custom-login', [\App\Http\Controllers\CustomAuthController::class, 'customLogin'])->name('login.custom'); 
 Route::get('registration', [\App\Http\Controllers\CustomAuthController::class, 'registration'])->name('register-user');
@@ -32,3 +37,5 @@ Route::get('signout', [\App\Http\Controllers\CustomAuthController::class, 'signO
 
 /* Route for private files */
 Route::resource('/privatefiles', \App\Http\Controllers\PrivateFileController::class)->middleware('auth');
+Route::get("/download/{path}", '\App\Http\Controllers\PrivateFileController@download')->middleware('auth');
+

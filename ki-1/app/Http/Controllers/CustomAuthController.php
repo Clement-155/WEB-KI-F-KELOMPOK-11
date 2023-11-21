@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use phpseclib3\Crypt\AES;
 use phpseclib3\Crypt\DES;
 use phpseclib3\Crypt\Random;
-
+use phpseclib3\Crypt\RSA;
 use Illuminate\Http\Request;
 use Session;
 use App\Models\User;
@@ -215,5 +215,23 @@ class CustomAuthController extends Controller
 
         $plaintext = $cipher->decrypt(substr($data, 8, strlen($data) - 8));
         return $plaintext;
+    }
+    function rsakeygen(){
+        $rsa = RSA::createKey();
+        $public = $rsa->getPublicKey();
+        return [
+            'publickey' => $public,
+            'privatekey' => $rsa,
+        ];
+    }
+    function rsadecrypt($data, $key){
+        
+        return $key->decrypt($data);
+    }
+    function rsaencrypt($data, $key){
+     
+      $encryptedData = $key->encrypt($data);
+    
+        return $encryptedData;
     }
 }

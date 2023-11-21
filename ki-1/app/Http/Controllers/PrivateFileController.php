@@ -131,9 +131,14 @@ class PrivateFileController extends Controller
 
     public function download($path) //Currently for rc4
     {
-        try {
-            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path));
-        } catch (FileNotFoundException $e) {
+        try{
+            $fileData = file_get_contents(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));   
+            $controller = new CustomAuthController();
+            $fileData = $controller->aes256cbcDecrypt($fileData, 'abcdefghijklmnopqrstuvwxyz123456');
+            return response()->streamDownload(function () use ($fileData) {
+                echo $fileData;
+            }, "AESDOWNLOAD.docx");
+        }  catch (FileNotFoundException $e) {
             abort(404); //or whatever you want do here
         }
     }

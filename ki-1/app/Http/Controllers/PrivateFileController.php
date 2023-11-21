@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use League\Flysystem\WhitespacePathNormalizer;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\CustomAuthController;
+use ErrorException;
 use Exception;
 
 class PrivateFileController extends Controller
@@ -129,16 +130,32 @@ class PrivateFileController extends Controller
         return redirect()->route('privatefiles.index')->with(['success' => 'Data Berhasil Disimpan!']);
     }
 
-    public function download($path) //Currently for rc4
+    public function download(Request $request, $path) //Currently for rc4
     {
+        
         try{
+            
+            $key = PrivateFile::all()->where('private_file', $path)->pluck('key')->get(0);
+
             $fileData = file_get_contents(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));   
             $controller = new CustomAuthController();
-            $fileData = $controller->aes256cbcDecrypt($fileData, 'abcdefghijklmnopqrstuvwxyz123456');
+
+            $encryptType = substr($path, 0, 4);
+            switch ($encryptType) { 
+                case "aes_":
+                    $fileData = $controller->aes256cbcDecrypt($fileData, $key);
+                    break;
+                case "des_":
+                    $fileData = $controller->desDecrypt($fileData, $key);
+                    break;
+                case "rc4_":
+                    $fileData = $controller->rc4Decrypt($fileData, $key);
+                    break;
+                }
             return response()->streamDownload(function () use ($fileData) {
                 echo $fileData;
-            }, "AESDOWNLOAD.docx");
-        }  catch (FileNotFoundException $e) {
+            }, "decrypted_" . $path);
+        }  catch (ErrorException $e) {
             abort(404); //or whatever you want do here
         }
     }

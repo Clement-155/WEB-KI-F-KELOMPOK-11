@@ -3,7 +3,7 @@
 use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Controllers\ShareController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -38,4 +38,4 @@ Route::get('signout', [\App\Http\Controllers\CustomAuthController::class, 'signO
 /* Route for private files */
 Route::resource('/privatefiles', \App\Http\Controllers\PrivateFileController::class)->middleware('auth');
 Route::get("/download/{path}", '\App\Http\Controllers\PrivateFileController@download')->middleware('auth');
-
+Route::resource("/share", ShareController::class)->middleware('auth');

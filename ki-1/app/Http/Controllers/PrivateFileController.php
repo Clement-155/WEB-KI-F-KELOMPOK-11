@@ -69,13 +69,13 @@ class PrivateFileController extends Controller
         $file = $request->file('private_file');
 
         // Generate a random encryption key
-        $key = 'amogus';
-        $aeskey = 'abcdefghijklmnopqrstuvwxyz123456';
-        $deskey = "12345678";
+        $rc4key = Random::string(32);
+        $aeskey = Random::string(32);
+        $deskey = Random::string(8);
 
         // Encrypt the file data
         $controller = new CustomAuthController();
-        $encryptedData = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $key);
+        $rc4Data = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $rc4key);
         $aesData = $controller->aes256cbcEncrypt(file_get_contents($file->getRealPath()), $aeskey);
         $desData = $controller->desEncrypt(file_get_contents($file->getRealPath()), $deskey);
 
@@ -83,29 +83,32 @@ class PrivateFileController extends Controller
         $fileExtension = $file->getClientOriginalExtension();
 
         // Generate a unique file name for the encrypted file
-        $encryptedFileName = 'encrypted_' . time() . '.' . $fileExtension;
+        $rc4FileName = 'rc4' . time() . '.' . $fileExtension;
         $aesFileName = 'aes_' . time() . '.' . $fileExtension;
         $desFileName = 'des_' . time() . '.' . $fileExtension;
 
         // Store the encrypted file
-        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $encryptedFileName, $encryptedData);
+        Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $rc4FileName, $rc4Data);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $aesFileName, $aesData);
         Storage::put('private/privatefiles/' . Auth::user()->username . '/' . $desFileName, $desData);
 
         // Create a record in the database
         PrivateFile::create([
             'user_id' => Auth::user()->id,
-            'private_file' => $encryptedFileName,
+            'private_file' => $rc4FileName,
+            'key' => $rc4key
         ]);
 
         PrivateFile::create([
             'user_id' => Auth::user()->id,
             'private_file' => $aesFileName,
+            'key' => $aeskey
         ]);
 
         PrivateFile::create([
             'user_id' => Auth::user()->id,
             'private_file' => $desFileName,
+            'key' => $deskey
         ]);
 
         // Redirect to index
@@ -114,9 +117,9 @@ class PrivateFileController extends Controller
 
     public function download($path)
     {
-        try{
-            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path ));
-        }  catch (FileNotFoundException $e) {
+        try {
+            $result = response()->download(storage_path("app/private/privatefiles/" . Auth::user()->username . '/' . $path));
+        } catch (FileNotFoundException $e) {
             abort(404); //or whatever you want do here
         }
         return $result;

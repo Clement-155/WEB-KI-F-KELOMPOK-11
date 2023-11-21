@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class PrivateFile extends Model
 {
     use HasFactory;
@@ -17,6 +18,7 @@ class PrivateFile extends Model
     protected $fillable = [
         'user_id',
         'private_file',
+        'key'
     ];
 
     /**

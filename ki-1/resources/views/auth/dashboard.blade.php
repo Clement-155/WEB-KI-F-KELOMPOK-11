@@ -26,9 +26,6 @@
                     </li>
                     @else
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('signout') }}">Logout</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile') }}">Profile</a>
                     </li>
                     <li class="nav-item">
@@ -40,6 +37,28 @@
                     @endguest
                 </ul>
             </div>
+            @guest
+            @else
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#signoutModal">
+                Logout
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="signoutModal" tabindex="-1" aria-labelledby="signoutModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            Anda yakin ingin keluar?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kembali</button>
+                            <a class="btn btn-primary" href="{{ route('signout') }}">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endguest
         </div>
     </nav>
     @yield('content')

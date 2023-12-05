@@ -18,7 +18,7 @@
 
                         <form class="mb-4" action="{{ route('privatefiles.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label class="font-weight-bold">Upload File (pdf, doc, docx, xls,xlsx, and video)</label>
                                 <input type="file" class="form-control @error(Auth::user()->id) is-invalid @enderror" name="private_file">
 

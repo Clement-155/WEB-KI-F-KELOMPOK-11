@@ -4,6 +4,8 @@ use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ShareController;
+use App\Http\Controllers\SigCheckController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,3 +45,6 @@ Route::resource("/share", ShareController::class)->middleware('auth');
 Route::get('/download-index', [ShareController::class, 'download_index'])->middleware('auth')->name('download-index');
 Route::get('/download-key', [ShareController::class, 'downloadKey'])->middleware('auth')->name('download-key');
 Route::post('/download-shared', [ShareController::class, 'download_shared'])->middleware('auth')->name('download-shared');
+
+Route::post('/pdf-check-signature', [SigCheckController::class, 'pdfSigCheck'])->middleware('auth')->name('pdf-check-signature');
+Route::get('/pdf-check-signature-index', [SigCheckController::class, 'index'])->middleware('auth')->name('pdf-check-signature-index');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\AES;
 use phpseclib3\Crypt\DES;
+use phpseclib3\Crypt\DSA;
 use phpseclib3\Crypt\Random;
 use phpseclib3\Crypt\RSA;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Session;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use phpseclib3\Crypt\Hash;
 
 class CustomAuthController extends Controller
 {
@@ -307,4 +309,5 @@ class CustomAuthController extends Controller
 
         return $encryptedData;
     }
+
 }

@@ -34,6 +34,10 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('download-index') }}">Download Shared Files</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pdf-check-signature-index') }}">Check PDF Signature</a>
+                    </li>
+                    
                     @endguest
                 </ul>
             </div>

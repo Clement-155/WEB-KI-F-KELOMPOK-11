@@ -68,6 +68,20 @@ class ShareController extends Controller
         return view('sharefiles.SharedFileView');
     }
     
+    /**
+     * PROBLEM : Catch error for :
+     * 1a. File do exists, or/and
+     * 1b. Right user
+     * 2. Wrong key
+     * ERROR : phpseclib3 \ Exception \ BadDecryptionException
+     * 
+     * PROBLEM : Catch error for :
+     * 0. Wrong user
+     * 1a. File do exists, or/and
+     * 1b. Right user
+     * 2. Right key
+     * ERROR : RunTimeException, Decryption Error
+     */
     public function download_shared(Request $request)
     {
         try{

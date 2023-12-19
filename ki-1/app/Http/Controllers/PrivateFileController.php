@@ -37,6 +37,7 @@ class PrivateFileController extends Controller
      */
     public function index(): View
     {
+
         //get posts
         $privateFiles = PrivateFile::latest()->where('user_id', '=', Auth::user()->id)->paginate(5); //FIX : Can use eliquent to get files instead
 
@@ -57,20 +58,36 @@ class PrivateFileController extends Controller
             'private_file' => 'required|mimes:pdf,doc,docx,xls,xlsx,mp4'
         ]);
 
-        // Try again for video
-        // if ($validator->fails()) {
-        //     $validator = Validator::make($request->all(), [
-        //         'private_file' => 'required|mimetypes:video'
-        //     ]);
-        // }
+
+
 
         // File not a valid type, error messages use user's id
         if ($validator->fails()) {
             return redirect()->route('privatefiles.index')->withErrors([Auth::user()->id => 'Invalid file format']);
         }
 
+        $pdf_validator = Validator::make($request->all(), [
+            'private_file' => 'required|mimes:pdf'
+        ]);
+
         // Get the file from the request
         $file = $request->file('private_file');
+        // Get file's data as string
+        $ori_file = file_get_contents($file->getRealPath());
+
+        /*-------------------------------------------*/
+        // ADD SIGNATURE if file is pdf
+        if (!$pdf_validator->fails()){
+            $ori_file = $ori_file . "test_string";
+
+        // 1. Calculate hash using sha256
+
+        // 2. Encrypt hash using uploader's private key
+
+        // 3. Appends signature to pdf file's data
+        }
+        /*-------------------------------------------*/
+
 
         // Generate a random encryption key
         $rc4key = bin2hex(random_bytes(16)); // 16 * 8 = 128 bit. 128 bit / 4 = 32 karakter hexadecimal
@@ -80,18 +97,24 @@ class PrivateFileController extends Controller
         $rc4 = new RC4();
         // Encrypt the file data
         $controller = new CustomAuthController();
-        
 
+        /**
+         * DEBUG START
+         */
+        
+        /**
+         * DEBUG END
+         */
         //RC4
         $start = hrtime(true);
-        $rc4Data = $controller->rc4Encrypt(file_get_contents($file->getRealPath()), $rc4key);
+        $rc4Data = $controller->rc4Encrypt($ori_file, $rc4key);
         $end = hrtime(true);
         $eta = $end - $start;
         $eta /= 1e+6;
         Log::channel('encrypt_log')->info("rc4Eecrypt : Code block was running for $eta milliseconds");
         
-        $aesData = $controller->aes256cbcEncrypt(file_get_contents($file->getRealPath()), $aeskey);
-        $desData = $controller->desEncrypt(file_get_contents($file->getRealPath()), $deskey);
+        $aesData = $controller->aes256cbcEncrypt($ori_file, $aeskey);
+        $desData = $controller->desEncrypt($ori_file, $deskey);
 
         // Determine the file extension
         $fileExtension = $file->getClientOriginalExtension();

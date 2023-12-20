@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Http\Controllers\crypto;
 use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\AES;
+use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Crypt\Random;
 
 
@@ -11,6 +14,7 @@ use App\Models\PrivateFile;
 
 //return type View
 use phpseclib3\Crypt\RC4;
+
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 use Illuminate\View\View;
@@ -27,6 +31,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\CustomAuthController;
 use ErrorException;
 use Exception;
+use phpseclib3\Crypt\Hash;
 
 class PrivateFileController extends Controller
 {
@@ -75,24 +80,39 @@ class PrivateFileController extends Controller
         // Get file's data as string
         $ori_file = file_get_contents($file->getRealPath());
 
-        /*-------------------------------------------*/
-        // ADD SIGNATURE if file is pdf
-        if (!$pdf_validator->fails()){
-            $ori_file = $ori_file . "test_string";
 
-        // 1. Calculate hash using sha256
-
-        // 2. Encrypt hash using uploader's private key
-
-        // 3. Appends signature to pdf file's data
-        }
-        /*-------------------------------------------*/
 
 
         // Generate a random encryption key
         $rc4key = bin2hex(random_bytes(16)); // 16 * 8 = 128 bit. 128 bit / 4 = 32 karakter hexadecimal
         $aeskey = bin2hex(random_bytes(16));
         $deskey = bin2hex(random_bytes(4)); // 8 karakter hexadecimal
+
+        /*-------------------------------------------*/
+        // ADD SIGNATURE if file is pdf
+        if (!$pdf_validator->fails()){
+            //$ori_file = $ori_file . "test_string";
+
+        // 1. Calculate hash using sha256
+
+            $hashController = new Hash();
+            $hashController->setHash("sha256");
+            $digest = $hashController->hash($ori_file);
+
+        // 2. Encrypt hash using uploader's private key
+
+        $private = User::all()->where('id','=', Auth::user()->id)->first()->private;
+        
+        $signature = "";
+
+        openssl_private_encrypt($digest, $signature, $private);
+
+        
+        // 3. Appends signature to pdf file's data
+
+        $ori_file = $ori_file . $signature;
+        }
+        /*-------------------------------------------*/
 
         $rc4 = new RC4();
         // Encrypt the file data
